@@ -13,80 +13,52 @@ ESP8266WebServer server ( 80 );   // create Objects
 // Initialize the LED output and associated webpage colors
 #define GreenLed          D6          // Led Pin
 #define RedLed            D7          // Led Pin
-#define BlueLed           D8          // Led Pin
-// Initialize the associated LED webpage font colors
-#define  GreenLedOn   "<font color=\"#7fbf7f\"><b>ON</b></font>"
-#define  GreenLedOff  "<font color=\"#006600\"><b>OFF</b></font>"
-#define  RedLedOn     "<font color=\"#ff7f7f\"><b>ON</b></font>"
-#define  RedLedOff    "<font color=\"#cc0000\"><b>OFF</b></font>"
-#define  BlueLedOn    "<font color=\"#7f7fff\"><b>ON</b></font>"
-#define  BlueLedOff   "<font color=\"#0000cc\"><b>OFF</b></font>"
+#define YellowLed         D5          // Led Pin
 
 // Initialize the DHT11 Temperature sensor
 #define DHTPIN            D4         // Pin which is connected to the DHT sensor.
 #define DHTTYPE           DHT11      // DHT 11
+float humidity,temperature;          // Storte humidity and temperature
 DHT dht(DHTPIN, DHTTYPE);
 
 // Initialize the OLED display using i2c
 #define SCL_PIN	          D1         // SCL-PIN
 #define SDA_PIN	          D2         // SDA-PIN
+#define line1             0          // 0  to 15 vertical pixel
+#define line2             16         // 16 to 31 vertical pixel
+#define line3             32         // 32 to 47 vertical pixel
+#define line4             48         // 48 to 63 vertical pixel
+#define pos1              0          // 0  to 31 horizontal pixel
+#define pos2              32         // 32 to 63 horizontal pixel
+#define pos3              64         // 64 to 95 horizontal pixel
+#define pos4              96         // 96 to 127 horizontal pixel
 SSD1306  display(0x3c, SDA_PIN, SCL_PIN);
 
 String getPage(){
   String checkedOn, checkedOff;
-  String GreenLedStatus, RedLedStatus, BlueLedStatus;
-
-  float humidity = dht.readHumidity();        // Read humidity as percentual
-  float temperature = dht.readTemperature();  // Read temperature as Celsius (the default)
-
-  display.clear();      // Clear the Oled display associated memory
-  display.display();    // Print an empty screen
-
+  String GreenLedStatus, RedLedStatus, YellowLedStatus;
   //                                           Automatic refresh every 30 seconds
   String page = "<html lang=en-EN><head><meta http-equiv='refresh' content='30'/>";
   page += "<title>ESP8266</title>";
   page += "<style> body { background-color: #fffff; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }</style>";
   page += "</head><body><h1>Wemos Wifi Basic Server</h1>";
   page += "<h3>Remote GPIO configuration</h3>";
-  // Check if any reads failed and exit early (to try again).
-  if (isnan(humidity) || isnan(temperature)) {
-    Serial.println("DHT sensor error");
-  }
-  else {
-    // Send temperature and humidity to Serial
-    Serial.print("Humidity: ");
-    Serial.print(humidity);
-    Serial.println(" %\t");
-    Serial.print("Temperature: ");
-    Serial.print(temperature);
-    Serial.println(" *C ");
-
-    // Send temperature and humidity to Oled Screen
-    //                 x  y  String
-    display.drawString(0, 0, "Temp:");
-    display.drawString(96, 0, String(temperature));
-    display.drawString(0, 16, "Humidity:");
-    display.drawString(96, 16, String(humidity));
-
-    // Send temperature and humidity to Web Page
-    page += "<p>Temperature ";
-    page += temperature; page += " </p>";
-    page += "<p>Humidity ";
-    page += humidity; page += " </p>";
-
-  }
-
+  // Send temperature and humidity to Web Page
+  page += "<p>Temperature ";
+  page += temperature; page += " </p>";
+  page += "<p>Humidity ";
+  page += humidity; page += " </p>";
+  // Form to update the Led state
   page += "<form action='/' method='POST'>";
 
   // handle Green LED
-  display.drawString(0, 32, "G:");
   if (digitalRead(GreenLed)==0){
-    GreenLedStatus = GreenLedOn; checkedOn = "checked"; checkedOff = "";
-    display.drawString(28, 32, "On");
+    GreenLedStatus = "<font color=\"#7fbf7f\"><b>ON</b></font>";
+    checkedOn = "checked"; checkedOff = "";
   }
   else{
-    GreenLedStatus = GreenLedOff; checkedOn = ""; checkedOff = "checked";
-    display.drawString(28, 32, "Off");
+    GreenLedStatus = "<font color=\"#006600\"><b>OFF</b></font>";
+    checkedOn = ""; checkedOff = "checked";
   }
   page += "<ul><li>Green Led Current status: ";
   page += GreenLedStatus;
@@ -94,32 +66,30 @@ String getPage(){
   page += "<INPUT type='radio' name='LED1' value='1'"; page += checkedOff;  page += ">OFF</li></ul>";
 
   // handle Red LED
-  display.drawString(64, 32, "R:");
   if (digitalRead(RedLed)==0){
-     RedLedStatus = RedLedOn; checkedOn = "checked"; checkedOff = "";
-     display.drawString(96, 32, "On");
+     RedLedStatus = "<font color=\"#ff7f7f\"><b>ON</b></font>";
+     checkedOn = "checked"; checkedOff = "";
   }
   else{
-     RedLedStatus = RedLedOff; checkedOn = ""; checkedOff = "checked";
-     display.drawString(96, 32, "Off");
+     RedLedStatus = "<font color=\"#cc0000\"><b>OFF</b></font>";
+     checkedOn = ""; checkedOff = "checked";
   }
   page += "<ul><li>Red   Led Current status: ";
   page += RedLedStatus;
   page += "<INPUT type='radio' name='LED2' value='0'"; page += checkedOn;  page += ">ON";
   page += "<INPUT type='radio' name='LED2' value='1'"; page += checkedOff;  page += ">OFF</li></ul>";
 
-  // handle Blue LED
-  display.drawString(0, 48, "B:");
-  if (digitalRead(BlueLed)==0){
-    BlueLedStatus = BlueLedOn; checkedOn = "checked"; checkedOff = "";
-    display.drawString(28, 48, "On");
+  // handle Yellow LED
+  if (digitalRead(YellowLed)==0){
+    YellowLedStatus = "<font color=\"#ffff3b\"><b>ON</b></font>";
+    checkedOn = "checked"; checkedOff = "";
   }
   else{
-    BlueLedStatus = BlueLedOff; checkedOn = ""; checkedOff = "checked";
-    display.drawString(28, 48, "Off");
+    YellowLedStatus = "<font color=\"#9d9d00\"><b>OFF</b></font>";
+    checkedOn = ""; checkedOff = "checked";
   }
-  page += "<ul><li>Blue  Led Current status: ";
-  page += BlueLedStatus;
+  page += "<ul><li>Yellow Led Current status: ";
+  page += YellowLedStatus;
   page += "<INPUT type='radio' name='LED3' value='0'"; page += checkedOn;  page += ">ON";
   page += "<INPUT type='radio' name='LED3' value='1'"; page += checkedOff;  page += ">OFF</li></ul>";
 
@@ -127,48 +97,100 @@ String getPage(){
   page += "<INPUT type='submit' value='Send'>";
   page += "</body></html>";
 
-  
-  display.display();   //  Visualise the new constructed Oled screen
   return page;
 }
 
 
-void handleSubmit() {
-  // update Green LED
-  Serial.print("Set Green Led: ");
+void update_output (){
+  // Set Green LED
   if ( server.arg("LED1") == "0" )
     digitalWrite(GreenLed, 0);
   else
     digitalWrite(GreenLed, 1);
-  Serial.println(!digitalRead(GreenLed));
-
-  // update RedLed LED
-  Serial.print("Set Red Led: ");
+  // Set Red LED
   if ( server.arg("LED2") == "0" )
     digitalWrite(RedLed, 0);
   else
     digitalWrite(RedLed, 1);
-  Serial.println(!digitalRead(RedLed));
-
-  // update Blue LED
-  Serial.print("Set Blue Led: ");
+  // Set Yellow LED
   if ( server.arg("LED3") == "0" )
-    digitalWrite(BlueLed, 0);
+    digitalWrite(YellowLed, 0);
   else
-    digitalWrite(BlueLed, 1);
-  Serial.println(!digitalRead(BlueLed));
-
-  //After changes resend the recompiled web page
-  server.send ( 200, "text/html", getPage() );
+    digitalWrite(YellowLed, 1);
 }
 
+void update_serial (){
+  // Green LED status
+  Serial.print("Set Green Led: ");
+  Serial.println(!digitalRead(GreenLed));
+  // Red Led LED status
+  Serial.print("Set Red Led: ");
+  Serial.println(!digitalRead(RedLed));
+  // Yellow LED status
+  Serial.print("Set Yellow Led: ");
+  Serial.println(!digitalRead(YellowLed));
+  // Send humidity
+  Serial.print("Humidity: ");
+  Serial.print(humidity);
+  Serial.println(" %\t");
+  // Send temperature
+  Serial.print("Temperature: ");
+  Serial.print(temperature);
+  Serial.println(" *C ");
+}
+
+void update_oled (){    // Send temperature and humidity to Oled Screen
+  display.clear();      // Clear the Oled display associated memory
+  display.display();    // Print an empty screen
+
+  //                 x     y    String
+  display.drawString(pos1 , line1, "Temp:");
+  display.drawString(pos4 , line1, String(temperature));
+  display.drawString(pos1 , line2, "Humidity:");
+  display.drawString(pos4 , line2, String(humidity));
+
+  // Green LED status
+  display.drawString(pos1 , line3, "G:");
+  if (digitalRead(GreenLed)==0)
+    display.drawString(pos2 , line3, "On");
+  else
+    display.drawString(pos2 , line3, "Off");
+
+  // Red LED status
+  display.drawString(pos3 , line3, "R:");
+  if (digitalRead(RedLed)==0)
+    display.drawString(pos4 , line3, "On");
+  else
+    display.drawString(pos4 , line3, "Off");
+
+  // Yellow LED status
+  display.drawString(pos1, line4, "Y:");
+  if (digitalRead(YellowLed)==0)
+    display.drawString(pos2 , line4, "On");
+  else
+    display.drawString(pos2 , line4, "Off");
+
+  display.display();   //  Visualise the new constructed Oled screen
+}
+
+
 void handleRoot(){
+  // read the arguments sent through the web page
   //               Green Led                  Red Led                  Blue Led
   if ( server.hasArg("LED1") || server.hasArg("LED2") || server.hasArg("LED3")) {
-    handleSubmit();
-  } else {
-    server.send ( 200, "text/html", getPage() );
+    update_output();
   }
+  // read the temperature and humidity from the sensor
+  humidity = dht.readHumidity();                  // Read humidity as percentual
+  temperature = dht.readTemperature();            // Read temperature as Celsius (the default)
+  if (isnan(humidity) || isnan(temperature)) {
+    humidity=0;
+    temperature=0;
+  }
+  // send information to serial monitor and Oled screen and recompile web page
+  update_serial();                                // send info to serial monitor
+  update_oled();                                  // send info to Oled display
+  server.send ( 200, "text/html", getPage() );    //After changes resend the recompiled web page
 }
 
 void setup() {
@@ -178,8 +200,8 @@ void setup() {
   pinMode(RedLed, OUTPUT);              // sets the digital pin D7 as output
   digitalWrite(RedLed, 1);              // sets the digital pin D7 high
 
-  pinMode(BlueLed, OUTPUT);             // sets the digital pin D8 as output
-  digitalWrite(BlueLed, 1);             // sets the digital pin D8 high
+  pinMode(YellowLed, OUTPUT);           // sets the digital pin D8 as output
+  digitalWrite(YellowLed, 1);           // sets the digital pin D8 high
 
   Serial.begin ( 115200 );              // init serial communication
 
@@ -207,6 +229,8 @@ void setup() {
 
   // Initialising the temperatuse sensor
   dht.begin();
+  humidity=0;
+  temperature=0;
   Serial.println("Temperature sensor initialized");
 }
 
