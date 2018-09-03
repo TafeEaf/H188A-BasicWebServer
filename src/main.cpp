@@ -227,6 +227,11 @@ void setup() {
   display.flipScreenVertically();
   display.setTextAlignment(TEXT_ALIGN_LEFT);
   display.setFont(ArialMT_Plain_16);
+  display.clear();      // Clear the Oled display associated memory
+  display.display();    // Print an empty screen
+  display.drawString(pos1 , line1, ssid);
+  display.drawString(pos1 , line2, (char*) WiFi.localIP().toString().c_str());
+  display.display();    // Print an empty screen
   Serial.println("Oled Screen initialized");
 
   // Initialising the temperatuse sensor
