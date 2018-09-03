@@ -181,16 +181,18 @@ void handleRoot(){
     update_output();
   }
   // read the temperature and humidity from the sensor
+  float humidity_previous_reading = humidity;
+  float temperature_previous_reading = temperature;
   humidity = dht.readHumidity();                  // Read humidity as percentual
   temperature = dht.readTemperature();            // Read temperature as Celsius (the default)
-  if (isnan(humidity) || isnan(temperature)) {
-    humidity=0;
-    temperature=0;
+  if (isnan(humidity) || isnan(temperature)) {    // If there is an error reading from the sensor
+    humidity=humidity_previous_reading;           // Use previous reading
+    temperature=temperature_previous_reading;     // Use previous reading
   }
   // send information to serial monitor and Oled screen and recompile web page
-  update_serial();                                // send info to serial monitor
-  update_oled();                                  // send info to Oled display
-  server.send ( 200, "text/html", getPage() );    //After changes resend the recompiled web page
+  update_serial();                                // Send info to Serial Monitor
+  update_oled();                                  // Send info to Oled Display
+  server.send ( 200, "text/html", getPage() );    // Send the recompiled Web Page
 }
 
 void setup() {
@@ -200,8 +202,8 @@ void setup() {
   pinMode(RedLed, OUTPUT);              // sets the digital pin D7 as output
   digitalWrite(RedLed, 1);              // sets the digital pin D7 high
 
-  pinMode(YellowLed, OUTPUT);           // sets the digital pin D8 as output
-  digitalWrite(YellowLed, 1);           // sets the digital pin D8 high
+  pinMode(YellowLed, OUTPUT);           // sets the digital pin D5 as output
+  digitalWrite(YellowLed, 1);           // sets the digital pin D5 high
 
   Serial.begin ( 115200 );              // init serial communication
 
